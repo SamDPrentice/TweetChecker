@@ -1,5 +1,7 @@
 import sys
 import urllib.request
+import sched
+import time
 try:
     import bs4 as bs
 except SystemError:
@@ -11,6 +13,8 @@ except SystemError:
 # Notes: Tweet Checker uses urllib, beautiful soup & lmxl site packages
 # Author: Samuel Prentice
 # Last Update: 23-11-2020
+
+schedule = sched.scheduler(time.time, time.sleep)
 
 
 class TweetChecker:
@@ -26,8 +30,11 @@ class TweetChecker:
             print(str(len(args)))
         else:
             self.handle = args[0][1]
-            self.make_request()
-            self.make_soup()
+
+    def run_all(self):
+        self.make_request()
+        self.make_soup()
+        self.print_last_five()
 
     def make_request(self):
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) '
@@ -52,6 +59,12 @@ class TweetChecker:
             print(self.collection[tweet])
 
 
+def update_every_ten_minutes(checker):
+    checker.run_all()
+    schedule.enter(600, 1, update_every_ten_minutes, (checker,))
+    schedule.run()
+
+
 if __name__ == '__main__':
     tc = TweetChecker(sys.argv)
-    tc.print_last_five()
+    update_every_ten_minutes(tc)
